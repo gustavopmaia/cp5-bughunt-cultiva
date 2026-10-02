@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -48,5 +49,20 @@ class AgendaServiceRegrasContratoTest {
         // Act + Assert
         assertThrows(StatusInvalidoException.class, () -> service.cancelar(1L));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deveCancelarQuandoAtendimentoEstaAgendado() {
+        // Arrange
+        Banho agendado = new Banho(1, "Rex", "PEQUENO", "Ana", LocalDateTime.now().plusDays(1));
+        when(repository.findById(1L)).thenReturn(Optional.of(agendado));
+        when(repository.save(agendado)).thenReturn(agendado);
+
+        // Act
+        Banho cancelado = (Banho) service.cancelar(1L);
+
+        // Assert
+        assertEquals("CANCELADO", cancelado.getStatus());
+        verify(repository).save(agendado);
     }
 }
