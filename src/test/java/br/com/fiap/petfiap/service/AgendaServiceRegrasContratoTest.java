@@ -1,6 +1,7 @@
 package br.com.fiap.petfiap.service;
 
 import br.com.fiap.petfiap.model.Banho;
+import br.com.fiap.petfiap.exception.StatusInvalidoException;
 import br.com.fiap.petfiap.repository.AtendimentoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,9 +10,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class AgendaServiceRegrasContratoTest {
@@ -30,5 +36,17 @@ class AgendaServiceRegrasContratoTest {
         // Act + Assert
         assertThrows(IllegalArgumentException.class, () -> service.agendar(banho));
         verifyNoInteractions(repository);
+    }
+
+    @Test
+    void deveRecusarCancelamentoQuandoAtendimentoEstaConcluido() {
+        // Arrange
+        Banho concluido = new Banho(1, "Rex", "PEQUENO", "Ana", LocalDateTime.now().plusDays(1));
+        concluido.concluir();
+        when(repository.findById(1L)).thenReturn(Optional.of(concluido));
+
+        // Act + Assert
+        assertThrows(StatusInvalidoException.class, () -> service.cancelar(1L));
+        verify(repository, never()).save(any());
     }
 }
